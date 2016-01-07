@@ -1,41 +1,165 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
 <head>
 <meta charset="utf-8" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  </head>
-  <style>
-  </style>
+<style>
+  .dnd {
+    margin: 5px;
+    width: 200px;
+    height: 100px;
+    padding 10px;
+    border: 1px dashed #aaaaaa;
+    text-align: center;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+  /* With help from:
+     http://www.webreference.com/programming/javascript/mk/column2/index.html
+     http://www.w3schools.com/html/html5_draganddrop.asp */
+
+
+  /** Mouse move capture ------------------------------------------------------------------------------ */
+  document.onmousemove = mouseMove; 
+
+  function mouseMove(ev){ 
+    // In IE, event attaches to the window.
+    ev = ev || window.event; 
+    var mousePos = mouseCoords(ev);
+    // console.log(mousePos);
+  } 
+
+  function mouseCoords(ev){ 
+    if (ev.pageX || ev.pageY) { 
+      return {
+        x:ev.pageX,
+        y:ev.pageY
+      }; 
+    } 
+    // IE uses clientXY, which is relative to the window, not document, and also add 2px border of document.
+    return { 
+      x:ev.clientX + document.body.scrollLeft - document.body.clientLeft, 
+      y:ev.clientY + document.body.scrollTop  - document.body.clientTop 
+    }; 
+  } 
+
+  var mouseOffset = null;
+
+  /** Drag and drop ------------------------------------------------------------------------------ */
+  document.onmouseup = mouseUp;
+  var dragObject = null;
+
+  function mouseUp(ev) {
+    dragObject = null;
+    console.log("mouse up");
+  }
+
+  function allowDrop(ev) {
+    ev.preventDefault();
+  }
+
+  function drag(ev) {
+    ev.dataTransfer.setData("name", ev.target.id);
+  }
+
+  function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("name");
+    // TODO: id? better way to get what we want. queryselector()?
+    ev.target.appendChild(document.getElementById(data));
+  }
+
+  function makeDraggable(object) {
+    object.onmousedown = function() {
+      dragObject = this;
+    };
+    // TODO: add class draggable? and make sure it has ID
+    object.draggable = true;
+    object.ondragstart = drag;
+  }
+
+  function makeDroppable(object) {
+    object.ondrop = drop;
+    object.ondragover = allowDrop
+  }
+
+  window.onload = function() {
+    makeDraggable(document.getElementById("1"));
+    makeDraggable(document.getElementById("2"));
+    makeDraggable(document.getElementById("3"));
+  };
+
+
+// Dunno if I want the next 5 methods -----------------------------.
+  // function getMouseOffset(target, ev){
+  //   ev = ev || window.event;
+  //   var docPos    = getPosition(target);
+  //   var mousePos  = mouseCoords(ev);
+  //   return {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
+  // }
+
+  // function getPosition(e){
+  //   var left = 0;
+  //   var top  = 0;
+  //   while (e.offsetParent){
+  //     left += e.offsetLeft;
+  //     top  += e.offsetTop;
+  //     e     = e.offsetParent;
+  //   }
+  //   left += e.offsetLeft;
+  //   top  += e.offsetTop;
+  //   return {x:left, y:top};
+  // }
+
+  // function mouseMove(ev){
+  //   ev           = ev || window.event;
+  //   var mousePos = mouseCoords(ev);
+  //   if(dragObject){
+  //     dragObject.style.position = 'absolute';
+  //     dragObject.style.top      = mousePos.y - mouseOffset.y;
+  //     dragObject.style.left     = mousePos.x - mouseOffset.x;
+  //     return false;
+  //   }
+  // }
+
+  // function makeDraggable(item){
+  //   if (!item) return;
+  //   item.onmousedown = function(ev) {
+  //     dragObject  = this;
+  //     mouseOffset = getMouseOffset(this, ev);
+  //     return false;
+  //   }
+  // }
+
+  // function makeClickable(object) {
+  //   object.onmousedown = function() {
+  //     dragObject = this;
+  //     console.log("draggable: " + dragObject);
+  //   }
+  // }
+  /* ---------------------------- */
+
+
+
+
+</script>
 </head>
 <body>
-  <div id="container">this text should disappear if you rendered correctly</div>
 
-  <script type="text/babel">
-    var TestComponent = React.createClass({
-      propTypes: {
-        text: React.PropTypes.string
-      },
+<div class="dnd target" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+<div class="dnd target" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+<div class="dnd target" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
 
-      getDefaultProps: function() {
-        return {
-          text: "hello, this displays if you didn't pass anything in"
-        };
-      },
+<div class="dnd origin" ondrop="drop(event)" ondragover="allowDrop(event)">
+  <img class="draggable" id="1" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#0000FF">
+</div>
 
-      render: function() {
-        return (
-          <div className="test-component">{this.props.text}</div>
-        );
-      }
-    });
+<img class="draggable" id="2" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#FF0000">
 
-    var test = "hello, this is dog";
-    ReactDOM.render(<TestComponent text={test} />, document.getElementById("container"));
-
-  </script>
+<img class="draggable" id="3" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#00FF00">
 
 </body>
 </html>

@@ -129,13 +129,59 @@
       return result;
     };
 
-/* ========================================================================================= */
+/* ================================= DRAG N' DROP ================================================= */
 
+    function drag(ev) {
+      ev.dataTransfer.setData("name", ev.target.id);
+      // TODO: better way? or even necessary..?
+      var content = ev.target.childNodes[0].childNodes[0];
+      ev.dataTransfer.setData("content", content);
+    }
+    
+    function makeDraggable(object) {
+      // TODO: add class draggable? and make sure it has ID
+      object.draggable = true;
+      object.ondragstart = drag;
+    }
 
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      var data = ev.dataTransfer.getData("name");
+      // TODO: id? better way to get what we want. queryselector()?
+      // debugger;
+      // ev.target.appendChild(document.getElementById(data));
+    }
+
+    function makeDroppable(object) {
+      object.ondrop = drop;
+      object.ondragover = allowDrop
+    }
+
+    window.onload = function() {
+      makeDraggable(document.getElementById("A"));
+      makeDraggable(document.getElementById("B"));
+      // TODO: perhaps a better way to ONLY take those with .gc-card and NOTHING else?
+      // var nonPreplaced = Object.keys(
+      //     document.querySelectorAll('.gc-card:not(.non-interactive)')).map(
+      //       function (key) { 
+      //         return document.querySelectorAll('.gc-card:not(.non-interactive)')[key]
+      //       });
+      // nonPreplaced = nonPreplaced.map(function(emptyCardNode) {
+      //   makeDroppable(emptyCardNode);
+      // })
+    };
+
+/* ===================================== REACT ====================================== */
 
     var Card = React.createClass({
       propTypes: {
         // Also, non-interactive
+        //todo: need to do key?
+        index: React.PropTypes.number,
         isPreplaced: React.PropTypes.bool,
         size: React.PropTypes.string,
         content: React.PropTypes.string,
@@ -143,7 +189,8 @@
         active: React.PropTypes.bool,
         // TODO: some kind of proptype that active != isPreplaced
         makeMyselfActive: React.PropTypes.func,
-        userPlaced: React.PropTypes.bool
+        userPlaced: React.PropTypes.bool,
+        drop: React.PropTypes.func
       },
  
       getDefaultProps: function() {
@@ -170,6 +217,16 @@
       // Needs to be changed to onMouseDown, onMouseUp
       _onClick: function() {
         this.props.makeMyselfActive(this.props.index);
+      },
+
+      _allowDrop: function(event) {
+        event.preventDefault();
+      },
+
+      _handleDrop: function(event) {
+        event.preventDefault();
+        debugger;
+        this.props.drop(this.props.index);
       },
  
       render: function() {
@@ -202,6 +259,9 @@
           visibility: "hidden"
         }
 
+        // TODO: replace this part with joinClasses()
+        var classNames = "gc-card";
+
         // This will be reworked to take dynamic class names cx() and ClassNameUtils.joinClassNames
         // Active state
         if (this.props.active && !this.props.isPreplaced) {
@@ -221,20 +281,16 @@
           styles.backgroundColor = "#ebedef";
           styles.boxShadow = "0px 1px 2px 0px rgba(77, 78, 78, 0.4)";
           textStyle.visibility = "visible";
+          classNames += " non-interactive";
         }
 
-        // var textCard = (
-        //   <div className="gc-card-text" style={textStyle}>
-        //       {this.props.text}
-        //     </div>);
-        // var emptyCard = <div className="gc-card-empty"></div>;
-        // var cardContents = (this.state.userPlaced) ? textCard : emptyCard;
-
         return (
-          <div className="gc-card" 
+          <div className={classNames} 
             // onMouseEnter={this._onHover}
             // onMouseLeave={this._offHover}
             onClick={this._onClick}
+            onDrop={this._handleDrop}
+            onDragOver={this._allowDrop}
             style={styles}>
 
             <div className="gc-card-content" style={textStyle}>
@@ -251,7 +307,8 @@
     var CardRow = React.createClass({
       propTypes: {
         cards: React.PropTypes.array,
-        selectActive: React.PropTypes.func
+        selectActive: React.PropTypes.func,
+        drop: React.PropTypes.func
       },
  
       getDefaultProps: function() {
@@ -333,7 +390,8 @@
               content = {cardContainer.getContent()}
               active = {cardContainer.isActive()}
               makeMyselfActive = {this.props.selectActive}
-              userPlaced = {cardContainer.isUserPlaced()} />);
+              userPlaced = {cardContainer.isUserPlaced()}
+              drop = {this.props.drop} />);
         }.bind(this));
 
         return (
@@ -346,7 +404,8 @@
 
 /* ========================================================================================= */
 
-  /* Non-interactive QM row, can display Images. */
+  /* Non-interactive QM row, can display Images. 
+     todo: keys */
   var QMCardRow = React.createClass({
     propTypes: {
       data: React.PropTypes.array,
@@ -387,13 +446,14 @@
 
 /* ========================================================================================= */
 
-    // Might make this further decomposed into LetterCardStack if styling is different.
+    // Might make this further decomposed into Letter/Number/ImageCardStack if styling is different.
     var TextCardStack = React.createClass({
       propTypes: {
         // tODO: decide or ask if string is the best way; if its always A, B, C, etc. then consider an enum
         content: React.PropTypes.string,
         size: React.PropTypes.string,
-        handleClick: React.PropTypes.func
+        handleClick: React.PropTypes.func,
+        drag: React.PropTypes.func
       },
 
       getDefaultProps: function() {
@@ -424,6 +484,10 @@
 
       _onClick: function() {
         this.props.handleClick(this.props.content);
+      },
+
+      _handleDrag: function(event) {
+        this.props.drag(this.props.content);
       },
 
       render: function() {
@@ -494,10 +558,13 @@
         return (
           <div className="gc-card-stack" style={wholeStackStyle} >
             <div className="gc-card-stack-top"
+              id={this.props.content}
               onMouseEnter={this._onHover}
               onMouseLeave={this._offHover}
               style={styles}
-              onClick={this._onClick}>
+              onClick={this._onClick}
+              draggable={true}
+              onDragStart={this._handleDrag} >
               <div className="gc-card-text" style={textStyle}>
                 {this.props.content}
               </div>
@@ -513,10 +580,12 @@
 /* ========================================================================================= */
 
     var CardStacks = React.createClass({
+      //TODO: generate id's (for drag and drop of cards)
       propTypes: {
         length: React.PropTypes.number,
         //TODO: better name?
-        moveToRow: React.PropTypes.func
+        moveToActiveSlot: React.PropTypes.func,
+        drag: React.PropTypes.func
       },
 
       //TODO: def props
@@ -528,10 +597,11 @@
           padding: "20px 10px"
         };
 
+        // todo: need ID's
         return (
           <div className="gc-card-stacks" style={styles} >
-            <TextCardStack content={"A"} handleClick={this.props.moveToRow} />
-            <TextCardStack content={"B"} handleClick={this.props.moveToRow} />
+            <TextCardStack content={"A"} handleClick={this.props.moveToActiveSlot} drag={this.props.drag} />
+            <TextCardStack content={"B"} handleClick={this.props.moveToActiveSlot} drag={this.props.drag} />
           </div>
         );
       }
@@ -574,7 +644,8 @@
 
         return ({
           activeSlot: this._getFirstOpenSlot(),
-          data: cardsFromProps
+          data: cardsFromProps,
+          draggedContent: ""
         });
       },
 
@@ -589,6 +660,7 @@
         });
       },
 
+      // TODO: one helper function to BOTH updated userPlaced and the content.
       _updateActiveCard: function(content) {
         this.state.data[this.state.activeSlot].setContent(content);
         this.state.data[this.state.activeSlot].setUserPlaced();
@@ -615,6 +687,27 @@
         return this.state.data[getActiveSlotIndex];
       },
 
+      /* Drag and drop stuff, repeated. */
+      //TODO: handle EV stuff in the CHILD's handler
+
+      _drag: function(content) {
+        // TODO: decide if this is a state thing...or a local var...?
+        this.setState({
+          draggedContent: content
+        });
+      },
+
+      _drop: function(index) {
+        this.state.data[index].setContent(this.state.draggedContent);
+        this.state.data[index].setUserPlaced();
+        //TODO: do we need to update active slot?
+        this.setState({
+          data: this.state.data
+        });
+      },
+
+      //TODO: one for mouseUp to clear this.state.draggedContent
+
       componentDidMount: function() {
         this._updateActiveSlot(this._getFirstOpenSlot());
       },
@@ -630,14 +723,19 @@
 
             <CardRow 
               cards={this.state.data}
-              selectActive={this._updateActiveSlot} />
+              selectActive={this._updateActiveSlot}
+              drop={this._drop} />
 
             <CardStacks
-              moveToRow={this._updateActiveCard} />
+              moveToActiveSlot={this._updateActiveCard}
+              drag={this._drag} />
           </div>
         );
       }
     });
+
+
+  /* ====================================== RENDER ============================================ */
  
     var test = false;
     ReactDOM.render(<CardPattern />, document.getElementById("container"));
