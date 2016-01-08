@@ -167,6 +167,10 @@
       this.content = content;
     };
 
+    CardContainer.prototype.clearContent = function() {
+      this.content = null;
+    };
+
     CardContainer.prototype.resize = function(size) {
       this.size = size;
     };
@@ -287,7 +291,8 @@
         // TODO: some kind of proptype that active != isPreplaced
         makeMyselfActive: React.PropTypes.func,
         userPlaced: React.PropTypes.bool,
-        drop: React.PropTypes.func
+        drop: React.PropTypes.func,
+        dragOut: React.PropTypes.func
       },
  
       getDefaultProps: function() {
@@ -322,8 +327,13 @@
 
       _handleDrop: function(event) {
         event.preventDefault();
-        debugger;
         this.props.drop(this.props.index);
+      },
+
+      _handleDrag: function(event) {
+        // event.preventDefault();
+        debugger;
+        this.props.dragOut(this.props.index);
       },
  
       render: function() {
@@ -388,6 +398,9 @@
             onClick={this._onClick}
             onDrop={this._handleDrop}
             onDragOver={this._allowDrop}
+            // TODO: leave vs exit
+            draggable={true}
+            onDragLeave={this._handleDrag}
             style={styles}>
 
             <div className="gc-card-content" style={textStyle}>
@@ -405,7 +418,8 @@
       propTypes: {
         cards: React.PropTypes.array,
         selectActive: React.PropTypes.func,
-        drop: React.PropTypes.func
+        drop: React.PropTypes.func,
+        dragOut: React.PropTypes.func
       },
  
       getDefaultProps: function() {
@@ -488,7 +502,8 @@
               active = {cardContainer.isActive()}
               makeMyselfActive = {this.props.selectActive}
               userPlaced = {cardContainer.isUserPlaced()}
-              drop = {this.props.drop} />);
+              drop = {this.props.drop}
+              dragOut = {this.props.dragOut} />);
         }.bind(this));
 
         return (
@@ -819,6 +834,17 @@
       /* Drag and drop stuff, repeated. */
       //TODO: handle EV stuff in the CHILD's handler
 
+      _dragCard: function(index) {
+        this.state.data[index].clearContent();
+        this.state.data[index].removeUserPlaced();
+        this.state.data[index].setActive();
+        this.state.data[this.state.activeSlot].removeActive();
+
+        this.setState({
+          data: this.state.data
+        });
+      },
+
       _dragStack: function(content) {
         // TODO: decide if this is a state thing...or a local var...?
         this.setState({
@@ -862,7 +888,8 @@
             <CardRow 
               cards={this.state.data}
               selectActive={this._updateActiveSlot}
-              drop={this._dropStack} />
+              drop={this._dropStack}
+              dragOut={this._dragCard} />
 
             <CardStacks
               moveToActiveSlot={this._updateActiveCard}
