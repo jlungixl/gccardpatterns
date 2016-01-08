@@ -8,6 +8,103 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
   <style>
+
+    .animated {
+        -webkit-animation-duration: 0.8s;
+        animation-duration: 0.8s;
+        -webkit-animation-fill-mode: both;
+        animation-fill-mode: both;
+        width: inherit;
+        height: inherit;
+    }
+
+    .animated.visible {
+        visibility: visible;
+    }
+
+    .animated.hidden {
+        visibility: hidden;
+    }
+
+    .animated.fast {
+        -webkit-animation-duration: 0.4s;
+        animation-duration: 0.4s;
+    }
+
+    .animated.fastest {
+        -webkit-animation-duration: 0.25s;
+        animation-duration: 0.25s;
+    }
+
+    .animated.slow {
+        -webkit-animation-duration: 1.5s;
+        animation-duration: 1.5s;
+    }
+
+    .animated.infinite {
+        -webkit-animation-iteration-count: infinite;
+        animation-iteration-count: infinite;
+    }
+
+    .animated.instant {
+        -webkit-animation-delay: 0.1s;
+        animation-delay: 0.1s;
+    }
+
+    .animated.short_delay {
+        -webkit-animation-delay: 1s;
+        animation-delay: 1s;
+    }
+
+    .animated.medium_delay {
+        -webkit-animation-delay: 2s;
+        animation-delay: 2s;
+    }
+
+    .animated.long_delay {
+        -webkit-animation-delay: 3s;
+        animation-delay: 3s;
+    }
+
+    @-webkit-keyframes shake {
+      0%, 100% {
+          -webkit-transform: translate3d(0, 0, 0);
+          transform: translate3d(0, 0, 0);
+      }
+
+      10%, 30%, 50%, 70%, 90% {
+          -webkit-transform: translate3d(-10px, 0, 0);
+          transform: translate3d(-10px, 0, 0);
+      }
+
+      20%, 40%, 60%, 80% {
+          -webkit-transform: translate3d(10px, 0, 0);
+          transform: translate3d(10px, 0, 0);
+      }
+    }
+
+    @keyframes shake {
+        0%, 100% {
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+
+        10%, 30%, 50%, 70%, 90% {
+            -webkit-transform: translate3d(-10px, 0, 0);
+            transform: translate3d(-10px, 0, 0);
+        }
+
+        20%, 40%, 60%, 80% {
+            -webkit-transform: translate3d(10px, 0, 0);
+            transform: translate3d(10px, 0, 0);
+        }
+    }
+
+    .shake {
+        -webkit-animation-name: shake;
+        animation-name: shake;
+    }
+
   </style>
 </head>
 <body>
@@ -422,7 +519,6 @@
     render: function() {
       var cardStyle = {
         verticalAlign: "top",
-        backgroundColor: "#dbf7ff",
         borderRadius: "5px",
         width: this.props.size,
         height: this.props.size,
@@ -453,7 +549,9 @@
         content: React.PropTypes.string,
         size: React.PropTypes.string,
         handleClick: React.PropTypes.func,
-        drag: React.PropTypes.func
+        drag: React.PropTypes.func,
+        // TODO: more general blocked state?
+        isFull: React.PropTypes.bool
       },
 
       getDefaultProps: function() {
@@ -482,7 +580,19 @@
         });
       },
 
+      _shake: function() {
+        this.setState({
+          shake: true
+        });
+        window.setTimeout(function() {
+          this.setState({ shake: false });
+        }.bind(this), 500);
+      },
+
       _onClick: function() {
+        if (this.props.isFull) {
+          this._shake();
+        }
         this.props.handleClick(this.props.content);
       },
 
@@ -505,6 +615,7 @@
 
         if (this.state.hover) {
           styles.boxShadow = "0px 5px 6px 0px rgba(77, 78, 78, 0.5)";
+          styles.transform = "rotate(-5deg)";
         }
 
         var textStyle = {
@@ -554,10 +665,14 @@
           display: "inline-block",
           margin: "2px 7px"
         };
+
+        var classNamesTop = "gc-card-stack-top";
+        if (this.state.shake) classNamesTop += " shake animated";
+
         
         return (
           <div className="gc-card-stack" style={wholeStackStyle} >
-            <div className="gc-card-stack-top"
+            <div className={classNamesTop}
               id={this.props.content}
               onMouseEnter={this._onHover}
               onMouseLeave={this._offHover}
@@ -585,14 +700,15 @@
         length: React.PropTypes.number,
         //TODO: better name?
         moveToActiveSlot: React.PropTypes.func,
-        drag: React.PropTypes.func
+        drag: React.PropTypes.func,
+        // TODO: more specific name?
+        isFull: React.PropTypes.bool
       },
 
       //TODO: def props
 
       render: function() {
         var styles = {
-          textAlign: "center",
           //TODO
           padding: "20px 10px"
         };
@@ -600,8 +716,16 @@
         // todo: need ID's
         return (
           <div className="gc-card-stacks" style={styles} >
-            <TextCardStack content={"A"} handleClick={this.props.moveToActiveSlot} drag={this.props.drag} />
-            <TextCardStack content={"B"} handleClick={this.props.moveToActiveSlot} drag={this.props.drag} />
+            <TextCardStack 
+              content={"A"} 
+              handleClick={this.props.moveToActiveSlot} 
+              drag={this.props.drag}
+              isFull={this.props.isFull} />
+            <TextCardStack 
+              content={"B"} 
+              handleClick={this.props.moveToActiveSlot} 
+              drag={this.props.drag}
+              isFull={this.props.isFull} />
           </div>
         );
       }
@@ -645,7 +769,8 @@
         return ({
           activeSlot: this._getFirstOpenSlot(),
           data: cardsFromProps,
-          draggedContent: ""
+          draggedContent: "",
+          isFull: false
         });
       },
 
@@ -662,6 +787,9 @@
 
       // TODO: one helper function to BOTH updated userPlaced and the content.
       _updateActiveCard: function(content) {
+        if (this.state.isFull) {
+          return;
+        }
         this.state.data[this.state.activeSlot].setContent(content);
         this.state.data[this.state.activeSlot].setUserPlaced();
         //TODO: cant be just += 1, must check to see if its alreayd placed.
@@ -674,7 +802,8 @@
         this._updateActiveSlot(this.state.activeSlot + offset);
 
         this.setState({
-          data: this.state.data
+          data: this.state.data,
+          isFull: (offset === 0) ? true : false
         });
       },
 
@@ -690,17 +819,25 @@
       /* Drag and drop stuff, repeated. */
       //TODO: handle EV stuff in the CHILD's handler
 
-      _drag: function(content) {
+      _dragStack: function(content) {
         // TODO: decide if this is a state thing...or a local var...?
         this.setState({
           draggedContent: content
         });
       },
 
-      _drop: function(index) {
+      _dropStack: function(index) {
         this.state.data[index].setContent(this.state.draggedContent);
         this.state.data[index].setUserPlaced();
-        //TODO: do we need to update active slot?
+        //TODO: helper
+        var offset = 0;
+        while (this.state.activeSlot + offset !== this.state.data.length - 1 
+          && this.state.data[this.state.activeSlot + offset].isUserPlaced()) 
+        {
+          offset++;
+        }
+        this._updateActiveSlot(this.state.activeSlot + offset);
+        
         this.setState({
           data: this.state.data
         });
@@ -714,7 +851,8 @@
 
       render: function() {
         var styles = {
-          padding: "20px"
+          padding: "20px",
+          display: "inline-block"
         };
 
         return (
@@ -724,11 +862,12 @@
             <CardRow 
               cards={this.state.data}
               selectActive={this._updateActiveSlot}
-              drop={this._drop} />
+              drop={this._dropStack} />
 
             <CardStacks
               moveToActiveSlot={this._updateActiveCard}
-              drag={this._drag} />
+              drag={this._dragStack}
+              isFull={this.state.isFull} />
           </div>
         );
       }
