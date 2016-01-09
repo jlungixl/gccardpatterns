@@ -450,57 +450,6 @@
           //todo: finish
         };
       },
-
-      // _getFirstOpenSlot: function() {
-      //   var count = 0;
-      //   for (var i = 0; i < this.props.cards.length; i++) {
-      //     var card = this.props.cards[i];
-      //     if (card.isPreplaced()) {
-      //       count++;
-      //     }
-      //     else {
-      //       return count;
-      //     }
-      //   }
-      //   return count;
-      // },
-
-      // getInitialState: function() {
-      //   var cardsFromProps = this.props.cards;
-      //   for (var i = 0; i < cardsFromProps.length; i++) {
-      //     cardsFromProps[i].key = i;
-      //   }
-
-      //   return ({
-      //     activeSlot: this._getFirstOpenSlot(),
-      //     cards: cardsFromProps
-      //   });
-      // },
-
-      // _updateActiveSlot: function(index) {
-      //   var oldActiveIndex = this.state.activeSlot;
-      //   this.state.cards[oldActiveIndex].removeActive();
-      //   this.state.cards[index].setActive();
-
-      //   this.setState({
-      //     activeSlot: index,
-      //     cards: this.state.cards
-      //   });
-
-      // },
-
-      // getActiveSlotIndex: function() {
-      //   return this.state.activeSlot;
-      // },
-
-      // getActiveSlot: function() {
-      //   //TODO: some precondition that it cant be preplaced?
-      //   return this.state.cards[getActiveSlotIndex];
-      // },
-
-      // componentDidMount: function() {
-      //   this._updateActiveSlot(this._getFirstOpenSlot());
-      // },
  
       render: function() {
 
@@ -627,7 +576,7 @@
       },
 
       _onClick: function() {
-        if (this.props.isFull) {
+        if (this.props.isFull()) {
           this._shake();
         }
         this.props.handleClick(this.props.content);
@@ -772,7 +721,7 @@
 /* ========================================================================================= */
 
     // Top level parent controller view, consists of card row and card stacks
-    var CardPattern = React.createClass({
+    var CardPatterns = React.createClass({
       propTypes: {
         data: React.PropTypes.array
       },
@@ -813,7 +762,9 @@
       _updateActiveSlot: function(index) {
         var oldActiveIndex = this.state.activeSlot;
         this.state.data[oldActiveIndex].removeActive();
-        this.state.data[index].setActive();
+        if (index > -1) {
+          this.state.data[index].setActive();
+        }
 
         this.setState({
           activeSlot: index,
@@ -822,7 +773,6 @@
       },
 
       _isFull: function() {
-        debugger;
         for (var i = 0; i < this.state.data.length; i++) {
           if (!(this.state.data[i].isPreplaced() || this.state.data[i].isUserPlaced())) {
             return false;
@@ -836,9 +786,11 @@
         if (this._isFull()) {
           return;
         }
+        // Place the card.
         this.state.data[this.state.activeSlot].setContent(content);
         this.state.data[this.state.activeSlot].setUserPlaced();
-        //TODO: cant be just += 1, must check to see if its alreayd placed.
+
+        // Update the active slot
         var offset = 0;
         while (this.state.activeSlot + offset !== this.state.data.length - 1 
           && this.state.data[this.state.activeSlot + offset].isUserPlaced()) 
@@ -846,13 +798,21 @@
           offset++;
         }
         // If we hit the end, do another pass through to see if previous slots opened up.
-        if (this.state.activeSlot + offset === this.state.data - 1) {
+        if (this.state.activeSlot + offset === this.state.data.length - 1) {
           var offset2 = 0;
-          while (!(this.state.data[offset].isPreplaced() || this.state.data[offset].isUserPlaced()) 
-            && offset !== this.state.data.length - 1) {
+          while ((this.state.data[offset2].isPreplaced() || this.state.data[offset2].isUserPlaced()) 
+            && offset2 !== this.state.data.length - 1) {
             offset2++;
           }
-          this._updateActiveSlot(offset2);
+          debugger;
+          if (offset2 === this.state.data.length - 1 && 
+            (this.state.data[offset].isPreplaced() || this.state.data[offset].isUserPlaced())) {
+            debugger;
+            this._updateActiveSlot(-1);
+          }
+          else {
+            this._updateActiveSlot(offset2);
+          }
         }
         else {
           this._updateActiveSlot(this.state.activeSlot + offset);
@@ -896,6 +856,7 @@
       _dropStack: function(index) {
         this.state.data[index].setContent(this.state.draggedContent);
         this.state.data[index].setUserPlaced();
+        // TODO: Call updateActiveCard...
         //TODO: helper
         var offset = 0;
         while (this.state.activeSlot + offset !== this.state.data.length - 1 
@@ -945,7 +906,7 @@
   /* ====================================== RENDER ============================================ */
  
     var test = false;
-    ReactDOM.render(<CardPattern />, document.getElementById("container"));
+    ReactDOM.render(<CardPatterns />, document.getElementById("container"));
  
   </script>
  

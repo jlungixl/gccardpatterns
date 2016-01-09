@@ -1,0 +1,355 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+
+  .card,
+  .square,
+  .circle,
+  .unknown {
+     display: inline-block;
+  }
+  /*.square,
+  .circle,
+  .unknown,*/
+
+  .muted .square,
+  .muted .circle,
+  .muted .unknown,
+  /*.discovered .square,
+  .discovered .circle,
+  .discovered .unknown,
+  .empty .square,
+  .empty .circle,
+  .empty .unknown,
+  .label,
+  .muted,
+  .discovered,*/
+
+  .empty {
+     /*transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;
+     transition: visibility 500ms;
+     -webkit-transition: visibility 500ms;*/
+  }
+
+  .card {
+     width: auto;
+     height: auto;
+     padding: 10px;
+     margin: 7px;
+     border: 2px solid #ebedef;
+     border-radius: 5px;
+     box-shadow: 0px 1px 2px 0px rgba(77, 78, 78, 0.4);
+     
+     background-color: #ebedef;
+     transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;
+
+     opacity: 1;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .card.empty {
+     background-color: #dbf7ff;
+     box-shadow: none;
+     
+     opacity: 1;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .card.empty div {
+     opacity: 0;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .card.muted, .card.empty {
+    /* opacity: 0.4; */
+     /* transition: opacity 500ms; */
+     /* -webkit-transition: opacity 500ms; */
+  }
+
+  .card.muted {
+     opacity: 0.4;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+
+
+  .card.hidden {
+     border: 0;
+     box-shadow: 0 0 0;
+     transition: border 1s, box-shadow 500ms;
+     -webkit-transition: box-shadow 500ms;
+  }
+
+  .card.discovered {
+     border: 2px solid #06b9f7;
+     opacity: 1;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+     /*
+     background-color: lightgreen;
+     transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;*/
+  }
+
+  .square,
+  .circle,
+  .unknown {
+     width: 60px;
+     height: 60px;
+  }
+
+  .label {
+     /* visibility: hidden; */
+     opacity: 0;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+     /* display: none; */
+     
+     color: white;
+     font-size: 40px;
+     /* border: 1px solid pink; */
+     
+     text-align: center;
+     vertical-align: middle;
+
+  }
+
+  .discovered .label,
+  .unknown .label {
+     /* visibility: visible; */
+     opacity: 1;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .discovered .label.hidden {
+     /* visibility: hidden; */
+     opacity: 0;
+     transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .square {
+     /* border: 1px solid blue; */
+     
+     background-color: blue;
+   /*  transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;*/
+     
+     opacity: 1;
+    transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .circle {
+     /* border: 1px solid red; */
+     
+     background-color: red;
+     border-radius: 30px;
+  transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;
+     
+     opacity: 1;
+    transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;
+  }
+
+  .unknown {
+     background-color: grey;
+  /*   transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;*/
+  }
+
+  .muted .square {
+     /* background-color: lightblue; */
+  /*   transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;*/
+  }
+
+  .muted .circle {
+     /* background-color: pink; */
+  /*   transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;*/
+  }
+
+  .muted .unknown {
+     /* background-color: lightgrey; */
+  /*   transition: background-color 500ms;
+     -webkit-transition: background-color 500ms;*/
+  }
+
+  .empty .square,
+  .empty .circle {
+     /* visibility: hidden; */
+     opacity: 0;
+    /* transition: opacity 500ms;
+     -webkit-transition: opacity 500ms;*/
+  }
+
+  #button {
+     vertical-align: bottom;
+     width: 80px;
+     height: 80px;
+  }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+
+// http://codepen.io/kevinxd3/pen/GprNzZ
+
+  console.clear();
+
+  var M = "muted";
+  var D = "discovered";
+  var E = "empty";
+  var N = "normal";
+  var H = "hidden"
+  var animations = [
+     [D, D, E, E, E, E, E, E, E, M],
+     [M, M, D, D, D, E, E, E, E, M],
+     [M, M, M, M, M, D, D, D, D, M],
+     //[D, D, D, D, D, D, D, D, D, N],
+     [N, N, N, N, N, N, N, N, N, N],
+  ]
+
+  var stepTime = 2000; // ms
+  var loopDelay = 500; // ms
+
+  var cards = document.getElementsByClassName("card");
+  var animate = function(stepNum) {
+     for (var c = 0; c < cards.length; c++) {
+        var card = cards[c];
+        card.className = "card " + animations[stepNum][c];
+     }
+
+     //console.log("step " + stepNum);
+
+     // If there are more steps, queue them.
+     if (stepNum < animations.length - 1) {
+        // Queue next step with timeout
+        setTimeout(function() {
+           animate(stepNum + 1);
+        }, stepTime);
+     }
+  }
+
+  var loopTime = (animations.length * stepTime) + loopDelay;
+  //alert(loopTime);
+  var animation;
+  var animationRunning;
+
+  function startAnimation() {
+     stopAnimation();
+     animationRunning = true;
+     setTimeout(function() {
+           animation = setInterval(function() {
+                 animate(0);
+              },
+              loopTime)
+        },
+        stepTime);
+     animate(0);
+     console.log("animation started")
+  }
+
+  function stopAnimation() {
+     animationRunning = false;
+     clearInterval(animation);
+     console.log("animation stopped");
+  }
+
+  function toggleAnimation() {
+     var button = document.getElementById("button");
+     button.disabled = 'disabled';
+     if (animationRunning) {
+        stopAnimation();
+        button.innerHTML = ("Start Animation");
+     } else {
+        startAnimation();
+        button.innerHTML = ("Stop Animation");
+     }
+     button.disabled = '';
+  }
+
+  startAnimation();
+
+  window.close = function() {
+     stopAnimation();
+  }
+
+  var v = 10;
+
+</script>
+</head>
+<body>
+
+  <div class="card hidden">
+     <div class="square">
+        <div class="label">1</div>
+     </div>
+  </div>
+  <div class="card">
+     <div class="circle">
+        <div class="label hidden">0</div>
+     </div>
+  </div>
+
+  <div class="card">
+     <div class="square">
+        <div class="label">1</div>
+     </div>
+  </div>
+  <div class="card">
+     <div class="square">
+        <div class="label">2</div>
+     </div>
+  </div>
+  <div class="card">
+     <div class="circle">
+        <div class="label hidden"> 0</div>
+     </div>
+  </div>
+
+  <div class="card">
+     <div class="square">
+        <div class="label">1</div>
+     </div>
+  </div>
+  <div class="card">
+     <div class="square">
+        <div class="label">2</div>
+     </div>
+  </div>
+  <div class="card">
+     <div class="square">
+        <div class="label">3</div>
+     </div>
+  </div>
+  <div class="card">
+     <div class="circle">
+        <div class="label hidden">0</div>
+     </div>
+  </div>
+
+  <div class="card">
+     <div class="unknown">
+        <div class="label">?</div>
+     </div>
+  </div>
+
+  <button id="button" onclick="toggleAnimation()">Stop Animation</button>
+
+</body>
+</html>
