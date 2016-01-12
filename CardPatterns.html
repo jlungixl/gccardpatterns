@@ -159,6 +159,7 @@
       this.active = false;
     };
 
+    // TODO: do not use this, use _update
     CardContainer.prototype.setActive = function() {
       this.active = true;
     };
@@ -182,6 +183,10 @@
 
     CardContainer.prototype.removeUserPlaced = function() {
       this.userPlaced = false;
+    };
+
+    CardContainer.prototype.isEmpty = function() {
+      return this.userPlaced && this.isPreplaced;
     };
 
     var testRow = [];
@@ -759,9 +764,20 @@
         });
       },
 
+      _isFull: function() {
+        for (var i = 0; i < this.state.data.length; i++) {
+          if (!(this.state.data[i].isPreplaced() || this.state.data[i].isUserPlaced())) {
+            return false;
+          }
+        }
+        return true;
+      },
+
       _updateActiveSlot: function(index) {
         var oldActiveIndex = this.state.activeSlot;
-        this.state.data[oldActiveIndex].removeActive();
+        if (this.state.activeSlot > -1) {
+          this.state.data[oldActiveIndex].removeActive();
+        }
         if (index > -1) {
           this.state.data[index].setActive();
         }
@@ -772,20 +788,12 @@
         });
       },
 
-      _isFull: function() {
-        for (var i = 0; i < this.state.data.length; i++) {
-          if (!(this.state.data[i].isPreplaced() || this.state.data[i].isUserPlaced())) {
-            return false;
-          }
-        }
-        return true;
-      },
-
       // TODO: one helper function to BOTH updated userPlaced and the content.
       _updateActiveCard: function(content) {
         if (this._isFull()) {
           return;
         }
+        debugger;
         // Place the card.
         this.state.data[this.state.activeSlot].setContent(content);
         this.state.data[this.state.activeSlot].setUserPlaced();
@@ -798,7 +806,7 @@
           offset++;
         }
         // If we hit the end, do another pass through to see if previous slots opened up.
-        if (this.state.activeSlot + offset === this.state.data.length - 1) {
+        if (this.state.data[this.state.activeSlot + offset].isEmpty() && this.state.activeSlot + offset === this.state.data.length - 1) {
           var offset2 = 0;
           while ((this.state.data[offset2].isPreplaced() || this.state.data[offset2].isUserPlaced()) 
             && offset2 !== this.state.data.length - 1) {
@@ -854,6 +862,9 @@
       },
 
       _dropStack: function(index) {
+        debugger;
+        this._updateActiveSlot(index);
+        this.forceUpdate();
         this.state.data[index].setContent(this.state.draggedContent);
         this.state.data[index].setUserPlaced();
         // TODO: Call updateActiveCard...
