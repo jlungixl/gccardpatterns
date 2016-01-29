@@ -16,16 +16,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script>
+<script type="text/babel">
   /* With help from:
      http://www.webreference.com/programming/javascript/mk/column2/index.html
      http://www.w3schools.com/html/html5_draganddrop.asp */
 
+        /** Mouse move capture ------------------------------------------------------------------------------ */
+  document.onmousemove = globalMouseMove; 
 
-  /** Mouse move capture ------------------------------------------------------------------------------ */
-  document.onmousemove = mouseMove; 
-
-  function mouseMove(ev){ 
+  function globalMouseMove(ev){ 
     // In IE, event attaches to the window.
     ev = ev || window.event; 
     var mousePos = mouseCoords(ev);
@@ -46,50 +45,59 @@
     }; 
   } 
 
-  var mouseOffset = null;
-
   /** Drag and drop ------------------------------------------------------------------------------ */
   document.onmouseup = mouseUp;
   var dragObject = null;
+  var clickedElement = null;
 
   function mouseUp(ev) {
     dragObject = null;
-    console.log("mouse up");
+    clickedElement = null;
+  }
+
+  function localMouseDown(ev) {
+    // ev.preventDefault();
+    clickedElement = ev.target;
+  }
+
+  // local mouse move for drag
+  function drag(ev) {
+    ev.preventDefault();
+    if (this === clickedElement) {
+      dragObject = this;
+    }
   }
 
   function allowDrop(ev) {
     ev.preventDefault();
   }
 
-  function drag(ev) {
-    ev.dataTransfer.setData("name", ev.target.id);
-  }
-
   function drop(ev) {
     ev.preventDefault();
-    var data = ev.dataTransfer.getData("name");
-    // TODO: id? better way to get what we want. queryselector()?
-    ev.target.appendChild(document.getElementById(data));
+    ev.target.appendChild(dragObject);
   }
 
   function makeDraggable(object) {
-    object.onmousedown = function() {
-      dragObject = this;
-    };
-    // TODO: add class draggable? and make sure it has ID
+    object.onmousedown = localMouseDown;
     object.draggable = true;
-    object.ondragstart = drag;
+    object.onmousemove = drag;
   }
 
   function makeDroppable(object) {
     object.ondrop = drop;
-    object.ondragover = allowDrop
+    object.ondragover = allowDrop;
+    // object.onmouseover = allowDrop;
   }
 
   window.onload = function() {
     makeDraggable(document.getElementById("1"));
     makeDraggable(document.getElementById("2"));
     makeDraggable(document.getElementById("3"));
+    var targets = document.getElementsByClassName('target');
+    console.log(targets.length);
+    for (var i = 0; i < targets.length; i++) {
+      makeDroppable(targets[i]);
+    }
   };
 
 
@@ -145,15 +153,106 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+ /* different way to track mouse movement */
+
+  // document.onmousemove = handleMouseMove;
+  // function handleMouseMove(event) {
+  //   console.log("poop");
+  //     var dot, eventDoc, doc, body, pageX, pageY;
+
+  //     event = event || window.event; // IE-ism
+
+  //     // If pageX/Y aren't available and clientX/Y are,
+  //     // calculate pageX/Y - logic taken from jQuery.
+  //     // (This is to support old IE)
+  //     if (event.pageX == null && event.clientX != null) {
+  //         eventDoc = (event.target && event.target.ownerDocument) || document;
+  //         doc = eventDoc.documentElement;
+  //         body = eventDoc.body;
+
+  //         event.pageX = event.clientX +
+  //           (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+  //           (doc && doc.clientLeft || body && body.clientLeft || 0);
+  //         event.pageY = event.clientY +
+  //           (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
+  //           (doc && doc.clientTop  || body && body.clientTop  || 0 );
+  //     }
+
+  //       // Use event.pageX / event.pageY here
+  //   }
+
+
+  /* old stuff, re-enable to reset changes */
+
+  // var mouseOffset = null;
+
+  /** Drag and drop ------------------------------------------------------------------------------ */
+  // document.onmouseup = mouseUp;
+  // var dragObject = null;
+
+  // function mouseUp(ev) {
+  //   dragObject = null;
+  //   console.log("mouse up");
+  // }
+
+  // function allowDrop(ev) {
+  //   ev.preventDefault();
+  // }
+
+  // function drag(ev) {
+  //   ev.dataTransfer.setData("name", ev.target.id);
+  // }
+
+  // function drop(ev) {
+  //   ev.preventDefault();
+  //   var data = ev.dataTransfer.getData("name");
+  //   // TODO: id? better way to get what we want. queryselector()?
+  //   ev.target.appendChild(document.getElementById(data));
+  // }
+
+  // function makeDraggable(object) {
+  //   object.onmousedown = function() {
+  //     dragObject = this;
+  //   };
+  //   // TODO: add class draggable? and make sure it has ID
+  //   object.draggable = true;
+  //   object.ondragstart = drag;
+  // }
+
+  // function makeDroppable(object) {
+  //   object.ondrop = drop;
+  //   object.ondragover = allowDrop
+  // }
+
+  // window.onload = function() {
+  //   makeDraggable(document.getElementById("1"));
+  //   makeDraggable(document.getElementById("2"));
+  //   makeDraggable(document.getElementById("3"));
+  // };
+
+
+
 </script>
 </head>
 <body>
 
-<div class="dnd target" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-<div class="dnd target" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-<div class="dnd target" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+<div class="dnd target" ></div>
+<div class="dnd target" ></div>
+<div class="dnd target" ></div>
 
-<div class="dnd origin" ondrop="drop(event)" ondragover="allowDrop(event)">
+<div class="dnd target origin" >
   <img class="draggable" id="1" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#0000FF">
 </div>
 

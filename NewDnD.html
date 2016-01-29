@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  </head>
+  <style>
+    .dnd {
+      margin: 5px;
+      width: 200px;
+      height: 100px;
+      padding 10px;
+      border: 1px dashed #aaaaaa;
+      text-align: center;
+    }
+    .dragging {
+      z-index: 25;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">this text should disappear if you rendered correctly</div>
+
+  <script type="text/babel">
+
+    // document.onmousemove = globalMouseMove; 
+
+    // function globalMouseMove(ev){ 
+    //   // In IE, event attaches to the window.
+    //   ev = ev || window.event; 
+    //   return mousePos = mouseCoords(ev);
+    // } 
+
+    function mouseCoords(event){ 
+      if (event.pageX || event.pageY) { 
+        return {
+          x:event.pageX,
+          y:event.pageY
+        }; 
+      } 
+      // IE uses clientXY, which is relative to the window, not document, and also add 2px border of document.
+      return { 
+        x:event.clientX + document.body.scrollLeft - document.body.clientLeft, 
+        y:event.clientY + document.body.scrollTop  - document.body.clientTop 
+      }; 
+    } 
+
+    function DNDBase() {
+      this._drops = [];
+      this._drags = [];
+
+      this.currentDrag = null;
+      this._globalMouseDown = false;
+      this._localMouseDown = false;
+      this._mouseInitialX = null;
+      this._mouseInitialY = null;
+      this._dx = null;
+      this._dy = null;
+    }
+
+    DNDBase.prototype.registerDrags = function(domNodes) {
+      for (var i = 0; i < domNodes.length; i++) {
+        this.createDrag(domNodes[i]);
+      }
+    }
+
+    DNDBase.prototype.registerDrops = function(domNodes) {
+      for (var i = 0; i < domNodes.length; i++) {
+        this.createDrop(domNodes[i]);
+      }
+    }
+
+    DNDBase.prototype.createDrag = function(domNode) {
+      domNode.className = domNode.className + " draggable";
+      this.attachDragHandlers(domNode);
+      this._drags.push(domNode);
+    };
+
+    DNDBase.prototype.createDrop = function(domNode) {
+      domNode.className = domNode.className + " droppable";
+      this.attachDropHandlers(domNode);
+      this._drops.push(domNode);
+    };
+
+    DNDBase.prototype.attachDragHandlers = function(domNode) {
+      domNode.onmousedown = function(ev) { 
+        this.handleMouseDown(ev); 
+      }.bind(this);
+      document.onmouseup = function(ev) { 
+        this.handleMouseUp(ev); 
+      }.bind(this);
+      domNode.onmousemove = function(ev) { 
+        this.handleMouseMove(ev); 
+      }.bind(this);
+      domNode.draggable = true;
+      domNode.style.position = "absolute";
+    }
+
+    DNDBase.prototype.attachDropHandlers = function(domNode) {
+      // TODO
+    }
+
+    DNDBase.prototype._inBoundingBox = function(touchX, touchY, bBox) {
+      return (touchX > bBox.left && touchY > bBox.top && touchX < bBox.right && touchY < bBox.bottom);
+    };
+
+    DNDBase.prototype.handleMouseDown = function(event) {
+      this._globalMouseDown = true;
+      this._mouseInitialX = mouseCoords(event).x;
+      this._mouseInitialY = mouseCoords(event).y;
+      console.log(mouseCoords(event).x, mouseCoords(event).y);
+    }
+
+    DNDBase.prototype.handleMouseUp = function() {
+      this._globalMouseDown = false;
+      this._localMouseDown = false;
+      this._mouseInitialX - null;
+      this._mouseInitialY = null;
+      this._dx = null;
+      this._dy = null;
+      var draggingClassNameIndex = this._currentDrag.className.indexOf("dragging") - 1;
+      this._currentDrag.className = this._currentDrag.className.substring(0, draggingClassNameIndex) + this._currentDrag.className.substring(draggingClassNameIndex + " dragging".length);
+      this._currentDrag.style.transform = "translate(" + this._mouseInitialX + "px," + this._mouseInitialY + "px)";
+      this._currentDrag = null;
+      console.log("up");
+    }
+
+    DNDBase.prototype.handleMouseMove = function(event) {
+      if (this._globalMouseDown) {
+        var mouseX = mouseCoords(event).x;
+        var mouseY = mouseCoords(event).y;
+        // this._dx = 0;
+        // this._dy = 0;
+      //   if (!this._currentDrag) {
+      //     for (var i = 0; i < this._drags.length; i++) {
+      //       if (this._inBoundingBox(x, y, this._drags[i].getBoundingClientRect())) {
+      //         this._localMouseDown = true;
+      //         this._currentDrag = event.target;
+      //         this._currentDrag.className = this._currentDrag.className += " dragging";
+      //         this._dx = 0;
+      //         this._dy = 0;
+      //         break;
+      //       }
+      //     }
+      //   }
+      //   this._dx = x - this._mouseInitialX;
+      //   this._dy = y - this._mouseInitialY;
+      //   console.log(this._mouseInitialX, this._mouseInitialY, "translate(" + this._dx + "px," + this._dy + "px)");
+      //   this._currentDrag.style.transform = "translate(" + this._dx + "px," + this._dy + "px)";
+      // }
+        var target = event.target;
+        target.style.zIndex = 25;
+        this._dx = mouseX - this._mouseInitialX;
+        this._dy = mouseY - this._mouseInitialY;
+
+        target.style.webkitTransform =
+        target.style.transform = 'translate(' + this._dx + 'px, ' + this._dy + 'px)';
+        console.log(mouseX, mouseY);
+        console.log('translate(' + this._dx + 'px, ' + this._dy + 'px)');
+      }
+    }
+
+    DNDBase.prototype.handleDrag = function() {
+      // if (this._)
+    }
+
+
+
+
+
+
+
+
+
+
+
+    var TestComponent = React.createClass({
+      propTypes: {
+        text: React.PropTypes.string
+      },
+
+      getDefaultProps: function() {
+        return {
+          text: "hello, this displays if you didn't pass anything in"
+        };
+      },
+
+      render: function() {
+        return (
+          <div className="test-component">{this.props.text}</div>
+        );
+      }
+    });
+
+    var test = "hello, this is dog";
+    var dndController = new DNDBase();
+    dndController.registerDrags(document.querySelectorAll('.QMImage'));
+    // dndController.registerDrops( );
+    ReactDOM.render(<TestComponent text={test} />, document.getElementById("container"));
+
+  </script>
+
+
+
+  <div class="dnd" ></div>
+  <div class="dnd" ></div>
+  <div class="dnd" ></div>
+
+  <div class="dnd" >
+    <img class="QMImage" id="1" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#0000FF">
+  </div>
+
+  <img class="QMImage" id="2" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#FF0000">
+
+  <img class="QMImage" id="3" src="dragonsOfTarkir.svg" width="100" height="100" style="background-color:#00FF00">
+
+</body>
+</html>

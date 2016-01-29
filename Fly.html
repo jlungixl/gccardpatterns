@@ -4,200 +4,36 @@
 <meta charset="utf-8" />
 <style>
 
-  .card,
-  .square,
-  .circle,
-  .unknown {
-     display: inline-block;
-  }
-  /*.square,
-  .circle,
-  .unknown,*/
-
-  .muted .square,
-  .muted .circle,
-  .muted .unknown,
-  /*.discovered .square,
-  .discovered .circle,
-  .discovered .unknown,
-  .empty .square,
-  .empty .circle,
-  .empty .unknown,
-  .label,
-  .muted,
-  .discovered,*/
-
-  .empty {
-     /*transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;
-     transition: visibility 500ms;
-     -webkit-transition: visibility 500ms;*/
-  }
-
-  .card {
-     width: auto;
-     height: auto;
-     padding: 10px;
-     margin: 7px;
-     border: 2px solid #ebedef;
-     border-radius: 5px;
-     box-shadow: 0px 1px 2px 0px rgba(77, 78, 78, 0.4);
-     
-     background-color: #ebedef;
-     transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;
-
-     opacity: 1;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-  }
-
-  .card.empty {
-     background-color: #dbf7ff;
-     box-shadow: none;
-     
-     opacity: 1;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-  }
-
-  .card.empty div {
-     opacity: 0;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-  }
-
-  .card.muted, .card.empty {
-    /* opacity: 0.4; */
-     /* transition: opacity 500ms; */
-     /* -webkit-transition: opacity 500ms; */
-  }
-
-  .card.muted {
-     opacity: 0.4;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-  }
-
-
-
-  .card.hidden {
-     border: 0;
-     box-shadow: 0 0 0;
-     transition: border 1s, box-shadow 500ms;
-     -webkit-transition: box-shadow 500ms;
-  }
-
-  .card.discovered {
-     border: 2px solid #06b9f7;
-     opacity: 1;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-     /*
-     background-color: lightgreen;
-     transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;*/
-  }
-
-  .square,
-  .circle,
-  .unknown {
-     width: 60px;
-     height: 60px;
-  }
-
-  .label {
-     /* visibility: hidden; */
-     opacity: 0;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-     /* display: none; */
-     
-     color: white;
-     font-size: 40px;
-     /* border: 1px solid pink; */
-     
-     text-align: center;
-     vertical-align: middle;
-
-  }
-
-  .discovered .label,
-  .unknown .label {
-     /* visibility: visible; */
-     opacity: 1;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
-  }
-
-  .discovered .label.hidden {
-     /* visibility: hidden; */
-     opacity: 0;
-     transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
+  .playground {
+    position: relative;
   }
 
   .square {
-     /* border: 1px solid blue; */
-     
-     background-color: blue;
-   /*  transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;*/
-     
-     opacity: 1;
-    transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
+    left: 0px;
+    width: 60px;
+    height: 60px;
+    display: inline-block;
+    position: absolute;
+    background-color: blue;
+    opacity: 0.5;
   }
 
-  .circle {
-     /* border: 1px solid red; */
-     
-     background-color: red;
-     border-radius: 30px;
-  transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;
-     
-     opacity: 1;
-    transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;
+  .target {
+    background-color: red;
+    left: 500px;
   }
 
-  .unknown {
-     background-color: grey;
-  /*   transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;*/
+  .origin {
+    /*animation: fly 1s;*/
+    left: 500px;
+    transition: left 1s;
+      -webkit-transition: left 1s;
   }
 
-  .muted .square {
-     /* background-color: lightblue; */
-  /*   transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;*/
-  }
-
-  .muted .circle {
-     /* background-color: pink; */
-  /*   transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;*/
-  }
-
-  .muted .unknown {
-     /* background-color: lightgrey; */
-  /*   transition: background-color 500ms;
-     -webkit-transition: background-color 500ms;*/
-  }
-
-  .empty .square,
-  .empty .circle {
-     /* visibility: hidden; */
-     opacity: 0;
-    /* transition: opacity 500ms;
-     -webkit-transition: opacity 500ms;*/
-  }
-
-  #button {
-     vertical-align: bottom;
-     width: 80px;
-     height: 80px;
+  .blank-box {
+    background-color: #f5f2f2;
+    border: 1px solid #d6d4d4;
+    text-align: center;
   }
 
 </style>
@@ -205,28 +41,137 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.1/react-dom.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script>
+<script type="text/babel">
+
+  var BlankBox = React.createClass({
+    PropTypes: {
+      // Box width.
+      width: React.PropTypes.number.isRequired,
+
+      // Display question mark or blank.
+      displayQuestionMark: React.PropTypes.bool.isRequired
+    },
+
+    render: function() {
+      var size = {
+        width: 14 * this.props.width
+      };
+
+      return this.props.displayQuestionMark
+        ? <input type="text" value="?" className="blank-box" disabled="disabled" style={size}/>
+        : <input type="text" className="blank-box" disabled="disabled" style={size}/>;
+    }
+
+  });
+  
+  var Square = React.createClass({
+    propTypes: {
+      targetLeft: React.PropTypes.string
+    },
+
+    getDefaultProps: function() {
+      return {
+        targetLeft: "500px"
+      };
+    },
+
+    getInitialState: function() {
+      return {
+        clicked: false
+      };
+    },
+
+    _handleClick: function() {
+      this.setState({
+        clicked: true
+      });
+    },
+
+    render: function() {
+      var CLASSNAME = "square";
+      if (this.state.clicked) {
+        CLASSNAME += " origin";
+      }
+
+      return (
+        <div className={CLASSNAME} onClick={this._handleClick}></div>
+      );
+    }
+  });
+
+  React.render(<Square />, document.querySelector('.render-here'));
+  React.render(<BlankBox width={20} displayQuestionMark={true} />, document.querySelector('.blank-box'));
+
+  function mouseMoveDetails(ev) {
+    console.log(ev.clientX);
+  }
 
 
+  function getMouseOffset(target, ev){
+    ev = ev || window.event;
+    var docPos    = getPosition(target);
+    var mousePos  = mouseCoords(ev);
+    return {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
+  }
+
+  function getPosition(e){
+    var left = 0;
+    var top  = 0;
+    while (e.offsetParent){
+      left += e.offsetLeft;
+      top  += e.offsetTop;
+      e     = e.offsetParent;
+    }
+    left += e.offsetLeft;
+    top  += e.offsetTop;
+    return {x:left, y:top};
+  }
+
+  function mouseMove(ev){
+    ev           = ev || window.event;
+    var mousePos = mouseCoords(ev);
+    if(dragObject){
+      dragObject.style.position = 'absolute';
+      dragObject.style.top      = mousePos.y - mouseOffset.y;
+      dragObject.style.left     = mousePos.x - mouseOffset.x;
+      return false;
+    }
+  }
+
+  function makeDraggable(item){
+    if (!item) return;
+    item.onmousedown = function(ev) {
+      dragObject  = this;
+      mouseOffset = getMouseOffset(this, ev);
+      return false;
+    }
+  }
+
+  function makeClickable(object) {
+    object.onmousedown = function() {
+      dragObject = this;
+      console.log("draggable: " + dragObject);
+    }
+  }
+
+  makeDraggable(document.querySelector('.square'));
+  document.querySelector('.target').onmousemove = mouseMoveDetails;
 
 </script>
 </head>
 <body>
 
+  <div class="playground">
 
-
-
-     <div class="square origin">
-        <div class="label">1</div>
+     <div class="render-here">
      </div>
-
-
 
      <div class="square target">
-        <div class="label">2</div>
      </div>
 
+  </div>
 
+  <div class="blank-box"><div>
 
 </body>
 </html>
